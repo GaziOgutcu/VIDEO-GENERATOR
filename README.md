@@ -161,3 +161,13 @@ Templates: `story` (text and optional video), `chart-step`, `big-number`, `compa
 `flow`, `grid`. Templates expose `layouts`, `mount`, `update`, and optional async
 `seek` for media. Register new templates in `src/stage/stage.html`.
 Factual values in supplied examples must be verified before publication.
+
+## Render health-check failures and stalled progress
+
+If Render sends a health-check failure email or the app reports **Server
+unavailable**, the last displayed percentage is stale; it does not prove the job
+is still running. Inspect Render's runtime logs for out-of-memory/process-exit
+messages or CPU starvation before retrying. The renderer loads only active stock
+clips and releases inactive clips, limits FFmpeg threads, and runs at lower CPU
+priority than the HTTP server. These measures reduce load but do not guarantee
+that long videos fit a free instance. Start with a short script after a failure.

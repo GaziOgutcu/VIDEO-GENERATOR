@@ -87,6 +87,12 @@ test('authenticated panel plans, selects stock, renders, previews and downloads 
     assert.equal(automaticJob.status, 'done'); assert.equal(automaticJob.credits[0].id, '42');
     assert.deepEqual(automaticJob.warnings, []);
     await fs.rm(path.join(root, 'out/jobs', automatic.id), { recursive: true, force: true });
+    await page.route('**/api/jobs', route => route.fulfill({ status: 502, contentType: 'text/html', body: '<!DOCTYPE html><title>Unavailable</title>' }));
+    await page.locator('#refresh').click();
+    await page.waitForFunction(() => document.getElementById('job-status').textContent.includes('Connection lost'));
+    assert.match(await page.locator('#notice').textContent(), /Server unavailable/);
+    assert.equal(await page.locator('#progress').isHidden(), true);
+    await page.unroute('**/api/jobs');
     const csrf = await fetch(`${origin}/api/plan`, { method: 'POST', headers: { Cookie: cookie, 'X-Requested-With': 'mfs-panel', Origin: 'https://untrusted.example' }, body: '{}' });
     assert.equal(csrf.status, 403);
     await page.locator('#logout').click(); await page.locator('#login').waitFor({ state: 'visible' });

@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { setPriority } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { compileProject } from './planner.mjs';
 import { selectAutomaticStock } from './auto-stock.mjs';
@@ -75,6 +76,8 @@ export class JobQueue {
     if (input.narration) args.push('--audio', path.join(dir, 'narration.mp3'));
     await new Promise((resolve, reject) => {
       const child = spawn(process.execPath, args, { cwd: this.root, detached: process.platform !== 'win32', stdio: ['ignore', 'pipe', 'pipe'] });
+      // Let the HTTP process respond to health checks ahead of CPU-heavy rendering.
+      try { setPriority(child.pid, 10); } catch { /* unsupported platforms retain normal priority */ }
       let log = '';
       const timer = setTimeout(() => { if (process.platform === 'win32') child.kill(); else { try { process.kill(-child.pid, 'SIGKILL'); } catch {} } reject(new Error('Rendering exceeded the 30-minute limit.')); }, 30 * 60 * 1000);
       child.stdout.on('data', chunk => {

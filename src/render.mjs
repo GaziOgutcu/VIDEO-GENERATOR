@@ -62,7 +62,7 @@ try {
       await page.evaluate(t => window.seekAsync(t), i / fps);
       const frame = await shot();
       await new Promise((resolve, reject) => ff.stdin.write(frame, error => error ? reject(error) : resolve()));
-      if (i % 30 === 0) process.stdout.write(`\r${i}/${frames}`);
+      if (i % 5 === 0) process.stdout.write(`\r${i}/${frames}`);
     }
     ff.stdin.end(); await done; const L = await page.evaluate(() => window.getLook()); log.push(L); fs.writeFileSync(logPath, JSON.stringify(log.slice(-20)));
     fs.writeFileSync(out + '.look.json', JSON.stringify({ accent: L.accentName, tone: L.toneIdx, bg: L.bgStyle, caption: L.caption, camera: L.camera, transition: L.transition, titleStyle: L.titleStyle }, null, 1));

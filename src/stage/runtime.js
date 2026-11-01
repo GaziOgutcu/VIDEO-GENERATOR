@@ -76,5 +76,6 @@ window.seek = t => {
 // Seek media before taking a screenshot; synchronous seek remains available to existing templates.
 window.seekAsync = async t => {
   window.seek(t);
+  for (const m of mounted) if (!(t >= m.sc.start && t <= m.sc.end)) m.T.release?.(m.inst);
   await Promise.all(mounted.filter(m => t >= m.sc.start && t <= m.sc.end && m.T.seek).map(m => m.T.seek(m.inst, t, m.sc)));
 };

@@ -2,10 +2,14 @@ const $ = id => document.getElementById(id);
 let scenes = [], selectedScene = 0, activeJob = null, polling = null, config;
 async function api(url, options = {}) {
   const response = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'mfs-panel', ...options.headers } });
-  const data = await response.json();
+  const text = await response.text();
+  let data;
+  try { data = JSON.parse(text); }
+  catch { throw new Error(`Server unavailable (HTTP ${response.status}). It may be restarting or overloaded. Job progress could not be refreshed.`); }
   if (!response.ok) { if (response.status === 401 && url !== '/api/login') showLogin(); throw new Error(data.error || 'Request failed.'); }
   return data;
 }
+function connectionFailed(error) { notice(error.message); $('job-status').textContent = 'Connection lost. Current job status is unknown. Retrying…'; $('progress').hidden = true; }
 function notice(text) { $('notice').textContent = text; $('notice').hidden = !text; }
 function showLogin() { $('login').hidden = false; $('studio').hidden = true; clearInterval(polling); }
 async function enter() {
@@ -13,7 +17,7 @@ async function enter() {
   $('resolution').textContent = `${config.width} × ${Math.round(config.width * 16 / 9)}`;
   $('provider-status').textContent = `Pixabay: ${config.stock ? 'key configured' : 'key required'} · ElevenLabs: ${config.narration ? 'key configured' : 'key required'}`;
   if (config.defaultVoice) { $('voice').add(new Option('Configured default voice', config.defaultVoice)); $('voice').value = config.defaultVoice; }
-  await refreshJobs(); clearInterval(polling); polling = setInterval(() => refreshJobs().catch(error => notice(error.message)), 2500);
+  await refreshJobs(); clearInterval(polling); polling = setInterval(() => refreshJobs().catch(connectionFailed), 2500);
 }
 $('login-form').onsubmit = async event => {
   event.preventDefault(); const button = event.submitter; button.disabled = true;
@@ -113,7 +117,7 @@ async function refreshJobs() {
   if (!activeJob && data.jobs.length) activeJob = data.jobs[0].id;
   const current = data.jobs.find(job => job.id === activeJob); if (current) showJob(current);
 }
-$('refresh').onclick = () => refreshJobs().catch(error => notice(error.message));
+$('refresh').onclick = () => refreshJobs().catch(connectionFailed);
 enter().catch(() => showLogin());
 
 $('auto-stock').onchange = () => drawScenes();
