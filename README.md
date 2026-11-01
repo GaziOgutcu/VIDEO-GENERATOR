@@ -2,9 +2,94 @@
 
 Deterministic (`seek(t)`) DOM/SVG/Canvas renderer. **Brand is locked, everything else varies per seed.**
 
+## Web paneli: metinden videoya
+
+Panel tek kullanıcı içindir. Parolayla giriş yapar; metni düzenlenebilir sahnelere
+böler, sahne bazında Pexels stok araması sunar, ElevenLabs ile seslendirir ve MP4
+oluşturur. Stok seçilmeyen sahneler markalı hareketli metin olarak render edilir.
+Sahne planlama kural tabanlıdır; metin yazmaz, finansal veri uydurmaz ve arama
+kelimelerini otomatik tercüme etmez. Her sahnenin başlığını ve anlatımını düzenleyin.
+
+```bash
+npm ci
+cp .env.example .env
+# .env içindeki PANEL_PASSWORD değerini benzersiz, 12+ karakterlik bir parolayla doldurun.
+npm start
+```
+
+Tarayıcıda `http://127.0.0.1:3000` açın. Bu adres yalnız uygulamayı çalıştıran
+makinede erişilir. GitHub repository sayfası uygulamayı çalıştırmaz.
+
+1. Panel parolasıyla giriş yapın; başlık ve anlatım metnini girin.
+2. **Sahneleri hazırla** ile sahneleri oluşturun ve başlıkları gözden geçirin.
+3. İstediğiniz sahnede **Stok görüntü seç** ile Pexels'te arayın (ör. `city`,
+   `saving money`); klibi seçin. Görüntüler dikey kadraja kırpılır, kısa klipler
+   tekrar edilir, stok klibin orijinal sesi kullanılmaz.
+4. Sessiz demo veya ElevenLabs seslendirmesini seçin. **Sesleri getir** hesabın
+   erişebildiği sesleri listeler; seslendirme kredi kullanır.
+5. **Videoyu oluştur** düğmesine basın. Hazır olunca önizleyin ve MP4'ü indirin.
+   **Kaynaklar** bağlantısı kliplerin Pexels kimliğini, sahibini ve sayfasını içerir.
+
+### Sağlayıcı ve sunucu ayarları
+
+Anahtarları yalnız `.env` veya sunucunun güvenli ortam ayarlarına ekleyin.
+Tarayıcıya anahtar gönderilmez. GitHub Actions secrets veya başka bir platforma
+eklenen değerler bu çalışan uygulamaya kendiliğinden aktarılmaz.
+
+| Değişken | Gereklilik |
+| --- | --- |
+| `PANEL_PASSWORD` | Panel için zorunlu, 12–256 karakter; API anahtarıyla aynı değer olmasın |
+| `PEXELS_API_KEY` | Stok arama ve indirme için gerekli; [Pexels API](https://www.pexels.com/api/) üzerinden alınır |
+| `ELEVENLABS_API_KEY` | İsteğe bağlı seslendirme için gerekli |
+| `ELEVENLABS_VOICE_ID` | Varsayılan ses; panelden de ses seçilebilir |
+| `HOST`, `PORT` | Varsayılan `127.0.0.1`, `3000` |
+| `COOKIE_SECURE` | HTTPS dağıtımında `true`; yerel HTTP için `false` |
+| `RENDER_WIDTH`, `RENDER_FPS` | `540` veya `1080`; `15` veya `30` (varsayılan 540/15) |
+
+Ağ erişimi: `api.pexels.com`, `videos.pexels.com`, `images.pexels.com` ve
+`api.elevenlabs.io`. Diğer Pexels medya alt alanlarına yönlenen bir klip hata
+verirse o alanı doğrulayıp ağ ayarlarına ekleyin. HTTP yönlendirmeleri otomatik
+takip edilmez; yalnız HTTPS Pexels medya adresleri indirilir. Stok dosyaları
+100 MB ile sınırlıdır. [Pexels lisansını](https://www.pexels.com/license/) ve klibin
+kullanım koşullarını yayınlamadan önce kontrol edin.
+
+Panel Node.js **24.5+** kullanır; `npm start` yönetilen bulut ortamlarının
+HTTP proxy ayarlarını Node'un yerleşik `--use-env-proxy` seçeneğiyle kullanır.
+Parola yerel süreçte okunabilen bir ortam değişkeni olmalıdır; yalnız uzak HTTPS
+isteklerine anahtar enjekte eden proxy bağlantısı panel parolası için uygun değildir.
+
+### Barındırma
+
+Bu uygulama Chromium ve FFmpeg çalıştırabilen, kalıcı diski olan bir Node.js
+sunucusunda çalışır. GitHub Pages gibi yalnız statik dosya sunan hizmetler uygun
+değildir. Uzak erişim için `HOST=0.0.0.0`, `PORT` ve `COOKIE_SECURE=true` ayarlayın;
+önünde HTTPS ters proxy kullanın. İşlem yöneticisiyle `npm start` komutunu yeniden
+başlatılabilir tutun. Anahtarları ve parolayı barındırma hizmetinin güvenli
+ayarlarından verin. Bu değişiklik bir alan adına canlı dağıtım yapmaz.
+
+Bir seferde bir render çalışır, en fazla beş iş sırada/çalışır durumda tutulur.
+İşler `out/jobs/<id>/` altında saklanır; tamamlanan videolar yeniden başlatmadan
+sonra görünür, yarım kalan işler hata olarak işaretlenir. Oturumlar yeniden giriş
+gerektirir. Render başına 30 dakika sınırı vardır. Disk kullanımı için eski iş
+klasörlerini uygulama duruyken temizleyin; `out/` klasörünü kullanıcı içeriği
+olarak koruyun ve gerektiğinde yedekleyin.
+
+### Testler
+
+```bash
+npm test
+```
+
+Testler Chromium ve FFmpeg gerektirir. Sahne zamanlaması, sağlayıcı yanıtlarının
+ayrıştırılması, medya adresi doğrulaması ve tarayıcı üzerinden parola, stok seçimi,
+gerçek MP4 renderı, HTTP Range indirme, oturum kapatma ve mobil taşma kontrolü
+çalışır. Testlerde Pexels yanıtı ve klibi yerel fixture ile sağlanır; canlı API
+anahtarı veya ücretli ElevenLabs çağrısı kullanılmaz. Ekran görüntüleri
+`out/panel-desktop.png` ve `out/panel-mobile.png` altında üretilir.
+
 ## Kurulum
 
-Bu depo `mfs-motion-engine-v2.zip` içindeki v2 motorunu içerir. Node.js **22.9+**,
+Bu depo `mfs-motion-engine-v2.zip` içindeki v2 motorunu içerir. Node.js **24.5+**,
 Chromium/Google Chrome ve `libx264` kodlayıcılı FFmpeg gerekir. Sürekli çalışan bir
 web servisi veya veritabanı gerekmez. Komutları repository kökünde çalıştırın.
 

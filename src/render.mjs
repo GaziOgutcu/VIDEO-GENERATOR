@@ -2,6 +2,7 @@
 //        [--audio narration.mp3] [--width 1080] [--fps 30] [--still 5.2 --out frame.png]
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url'; import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
+import { sendFile } from '../server/files.mjs';
 import { chromium } from 'playwright-core';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const a = process.argv.slice(2), get = (f, d) => { const i = a.indexOf(f); return i >= 0 ? a[i + 1] : d; };
@@ -24,7 +25,6 @@ function findChrome() {
   const f = c.find(p => p && fs.existsSync(p)); if (!f) throw new Error('Chromium not found; set CHROME_PATH'); return f;
 }
 // Serve local assets over HTTP: managed Chromium can block file:// navigation.
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.woff2': 'font/woff2', '.png': 'image/png', '.svg': 'image/svg+xml' };
 const server = createServer(async (req, res) => {
   try {
     if (req.url === '/favicon.ico') { res.writeHead(204).end(); return; }
@@ -32,8 +32,7 @@ const server = createServer(async (req, res) => {
     if (!file.startsWith(root + path.sep) || path.relative(root, file).split(path.sep).some(part => part.startsWith('.'))) {
       res.writeHead(403).end(); return;
     }
-    const data = await fs.promises.readFile(file);
-    res.writeHead(200, { 'Content-Type': types[path.extname(file)] || 'application/octet-stream' }); res.end(data);
+    await sendFile(req, res, file);
   } catch { res.writeHead(404).end(); }
 });
 await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
@@ -43,12 +42,13 @@ try {
   fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
   browser = await chromium.launch({ headless: true, executablePath: findChrome(), args: ['--no-sandbox', '--disable-dev-shm-usage', '--force-color-profile=srgb'] });
   const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: OW / 1080 });
-  page.on('pageerror', e => { throw e; }); page.on('console', m => m.type() === 'error' && console.error('[page]', m.text()));
+  let pageError;
+  page.on('pageerror', error => { pageError = error; }); page.on('console', m => m.type() === 'error' && console.error('[page]', m.text()));
   await page.goto(`http://127.0.0.1:${server.address().port}/src/stage/stage.html`);
   await page.evaluate(([p, w, t]) => window.init(p, w, t), [project, words, theme]);
   const dur = await page.evaluate(() => window.getDuration());
-  const shot = () => page.locator('#stage').screenshot({ type: 'png' });
-  if (still !== undefined) { await page.evaluate(t => window.seek(t), Number(still)); fs.writeFileSync(out, await shot()); console.log('Saved', out); }
+  const shot = () => { if (pageError) throw pageError; return page.locator('#stage').screenshot({ type: 'png' }); };
+  if (still !== undefined) { await page.evaluate(t => window.seekAsync(t), Number(still)); fs.writeFileSync(out, await shot()); console.log('Saved', out); }
   else {
     const frames = Math.round(dur * fps);
     const inArgs = ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-i', '-'];
@@ -59,7 +59,7 @@ try {
     done.catch(() => {});
     ff.stdin.on('error', () => {});
     for (let i = 0; i < frames; i++) {
-      await page.evaluate(t => window.seek(t), i / fps);
+      await page.evaluate(t => window.seekAsync(t), i / fps);
       const frame = await shot();
       await new Promise((resolve, reject) => ff.stdin.write(frame, error => error ? reject(error) : resolve()));
       if (i % 30 === 0) process.stdout.write(`\r${i}/${frames}`);

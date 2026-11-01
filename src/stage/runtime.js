@@ -37,7 +37,7 @@ window.init = async (p, w, th) => {
     const brand = H('div', '', root, `<i></i>${(project.brand || theme.name).toUpperCase()}`); brand.className = 'brand';
     if (look.titleStyle === 'left' || look.titleStyle === 'kicker') { brand.style.left = '90px'; brand.style.textAlign = 'left'; brand.style.width = '900px'; }
     const title = H('div', '', root); title.className = 'title ts-' + look.titleStyle;
-    const span = H('span', '', title, sc.title || ''); const rule = H('div', '', root); rule.className = 'rule';
+    const span = H('span', '', title); span.textContent = sc.title || ''; const rule = H('div', '', root); rule.className = 'rule';
     let kick; if (look.titleStyle === 'kicker') { kick = H('div', '', root, sc.kicker || ''); kick.className = 'kicker'; }
     if (look.titleStyle === 'boxed') { span.style.background = L.accent; span.style.color = '#04101A'; }
     rule.style.background = L.accent; rule.style.boxShadow = `0 0 18px ${L.accent}`;
@@ -71,4 +71,10 @@ window.seek = t => {
     m.T.update(m.inst, t, sc, sc.tm, L);
   });
   Captions.update(t);
+};
+
+// Seek media before taking a screenshot; synchronous seek remains available to existing templates.
+window.seekAsync = async t => {
+  window.seek(t);
+  await Promise.all(mounted.filter(m => t >= m.sc.start && t <= m.sc.end && m.T.seek).map(m => m.T.seek(m.inst, t, m.sc)));
 };
