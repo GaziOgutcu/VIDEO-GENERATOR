@@ -43,7 +43,7 @@ test('Pixabay download rejects untrusted destinations before fetching bytes', as
     calls++;
     return Response.json({ hits: [{ id: 42, videos: { medium: { width: 1, height: 1, url: 'https://127.0.0.1/private' } } }] });
   } });
-  await assert.rejects(provider.download('42', '/tmp/unused-stock.mp4'), /doğrulanamadı/); assert.equal(calls, 1);
+  await assert.rejects(provider.download('42', '/tmp/unused-stock.mp4'), /could not be verified/); assert.equal(calls, 1);
 });
 test('Pixabay downloader fetches metadata by ID and never forwards API key to CDN', async () => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'mfs-stock-'));

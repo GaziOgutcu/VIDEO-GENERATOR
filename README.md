@@ -1,252 +1,163 @@
-# Money From Scratch — Motion Engine v2
+# Money From Scratch — Video Studio
 
-Deterministic (`seek(t)`) DOM/SVG/Canvas renderer. **Brand is locked, everything else varies per seed.**
+Turn a script into a vertical MP4 with branded motion graphics, automatically
+selected Pixabay stock footage, optional ElevenLabs narration, and word captions.
+The engine uses Playwright/Chromium to render frames and FFmpeg to encode H.264.
 
-## Otomatik script → video
-
-Metni yapıştırıp **Videoyu oluştur** düğmesine basın. Sahne düzenleyicisini açmak
-ve her sahneye medya seçmek zorunlu değildir. Varsayılan açık olan **Pixabay
-görüntülerini metinden otomatik seç** ayarı sahne metninden anahtar kelime çıkarır,
-Pixabay'de arar, mümkünse farklı klipler seçer ve indirip rendera ekler. Elle seçilmiş
-klipler korunur. Tamamen grafik video için otomatik stok seçimini kapatın.
-
-Anahtar kelime çıkarımı yerel kurallarla çalışır; yeni AI görüntü üretmez veya
-her metni anlamsal olarak kusursuz eşleştirmez. Pixabay anahtarı gerekir. Eşleşme
-bulunamazsa ya da API araması başarısızsa hareketli metne dönülür; sonuç mesajı
-bunu açıkça belirtir. Klip kaynakları **Kaynaklar** dosyasında saklanır.
-Seslendirme mevcut ElevenLabs seçiminizi kullanır; API ayarları değiştirilmez.
-
-API üzerinden de `POST /api/jobs` gövdesinde `script`, `autoStock: true`,
-`narration: false` (veya ses seçimiyle `true`) gönderilebilir. Önceden sahne
-üretmek gerekmez. Mevcut `scenes` tabanlı istekler çalışmaya devam eder.
-
-## Geçici parolasız test modu
-
-Parola kontrolü şu an varsayılan olarak kapalıdır; panel adresi doğrudan açılır.
-`PANEL_PASSWORD` ve ElevenLabs/Pixabay anahtarları silinmez. Girişi tekrar açmak
-istediğinizde sunucuda `PANEL_AUTH_ENABLED=true` ayarlayıp yeniden dağıtın.
-Bu modda adresi bilen herkes videolara ve üretim özelliklerine erişebilir;
-bağlı servislerde kredi harcayabilir. Aşağıdaki parola adımları yalnız giriş
-tekrar etkinleştirildiğinde geçerlidir.
-
-## Ücretsiz web adresiyle yayınla (Render)
+## Deploy on Render
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/GaziOgutcu/VIDEO-GENERATOR)
 
-1. Yukarıdaki **Deploy to Render** düğmesini açıp Render hesabına giriş yapın;
-   GitHub reposuna erişimi onaylayın. `render.yaml` ücretsiz Docker web servisini
-   hazırlar. Oluşturma ekranında planın **Free** olduğunu doğrulayın.
-2. Kurulum tamamlanınca Render'ın verdiği `https://…onrender.com` adresini açın.
-   Domain satın almanız gerekmez. Henüz oluşturulmamış bir adres burada verilmez.
-3. Render → servis → **Environment** bölümünde otomatik oluşturulan
-   `PANEL_PASSWORD` değerini görüntüleyin; panel girişinde bu parolayı kullanın.
-4. Aynı bölüme `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` ve `PIXABAY_API_KEY`
-   değerlerinizi ekleyip kaydedin ve yeniden dağıtın. Eksik anahtarlarla sessiz,
-   stok görüntüsüz video oluşturabilirsiniz. Bu işlem mevcut yerel `.env`
-   dosyanızı değiştirmez. API anahtarlarını GitHub dosyalarına yazmayın.
+1. Sign in to Render with GitHub and deploy the blueprint. Verify the **Free** plan.
+2. Open the `https://…onrender.com` address assigned by Render.
+3. Add your API keys in the service's **Environment** settings and redeploy.
+4. For subsequent code updates, choose **Manual Deploy → Deploy latest commit**.
 
-Ücretsiz plan deneme içindir: hareketsizlikte servis uyuyabilir, ilk açılış
-gecikebilir; disk kalıcı değildir ve yeniden dağıtım/yeniden oluşturma videoları
-silebilir. Hazır MP4'leri indirin. Chromium/FFmpeg kaynak tüketir; uzun videolar
-ücretsiz planın bellek/CPU sınırlarına takılabilir. Canlı bir domain, servis
-hesabında **Deploy** tamamlandıktan sonra oluşur; GitHub'a push tek başına servis
-oluşturmaz. Docker imajı `.env` ve üretilmiş videoları içermez. Dağıtım imajı yerelde
-512 MB bellek ve 1 CPU sınırıyla giriş, kısa sessiz video üretimi ve MP4 indirme
-akışında doğrulandı; bu sonuç uzun veya stok ağırlıklı videoların aynı sınıra
-sığacağını garanti etmez. FFmpeg iş parçacıkları bellek için birle sınırlandırılır.
+Public test mode is currently the default. Anyone with the URL can access videos,
+create jobs and consume credits from connected providers. To restore login, set
+`PANEL_AUTH_ENABLED=true` and a unique `PANEL_PASSWORD` containing 12–256 characters.
+The blueprint generates a password, but it is unused while login is disabled.
 
-## Web paneli: metinden videoya
+The free service can sleep and has ephemeral disk storage. Download completed
+videos; redeployments or instance replacement may delete them. Long or stock-heavy
+renders may exceed free-tier CPU/memory limits. A short silent video was verified
+in the deployment image under a 512 MB / 1 CPU limit. FFmpeg uses one encoding
+thread to reduce memory use. GitHub Pages cannot run this backend.
 
-Panel tek kullanıcı içindir. Parolayla giriş yapar; metni düzenlenebilir sahnelere
-böler, sahne bazında Pixabay stok araması sunar, ElevenLabs ile seslendirir ve MP4
-oluşturur. Stok seçilmeyen sahneler markalı hareketli metin olarak render edilir.
-Sahne planlama kural tabanlıdır; metin yazmaz, finansal veri uydurmaz ve arama
-kelimelerini otomatik tercüme etmez. Her sahnenin başlığını ve anlatımını düzenleyin.
+## Use the studio
+
+1. Paste your script and enter a title.
+2. Leave **Automatically select Pixabay footage from the script** enabled.
+3. Choose **Silent demo** or **ElevenLabs narration** and a voice.
+4. Click **Create video**. Scene editing and manual clip selection are optional.
+5. Preview the result, download the MP4, and inspect **Credits** for stock sources.
+
+Automatic selection uses local keyword rules and Pixabay search. It does not
+create AI images or guarantee semantic matching. It tries to avoid duplicate
+clips. If search fails or has no results, scenes use motion text and the completion
+message reports that fallback. Stock clips are cropped vertically, looped if short,
+and used without original audio. Manually selected clips are preserved.
+
+## Local setup
+
+Requirements: Node.js **24.5+**, Chromium/Chrome, and FFmpeg with `libx264`.
+Run all commands from the repository root. No database is required.
 
 ```bash
 npm ci
+# Debian/Ubuntu, if the system dependencies are missing:
+sudo apt-get update
+sudo apt-get install -y chromium ffmpeg
+# Keep existing configuration; never overwrite your .env:
 [ -f .env ] || cp .env.example .env
-# .env içindeki PANEL_PASSWORD değerini benzersiz, 12+ karakterlik bir parolayla doldurun.
 npm start
 ```
 
-Tarayıcıda `http://127.0.0.1:3000` açın. Bu adres yalnız uygulamayı çalıştıran
-makinede erişilir. GitHub repository sayfası uygulamayı çalıştırmaz.
+Open `http://127.0.0.1:3000` on the machine running the app. For remote hosting,
+use `HOST=0.0.0.0`, an HTTPS reverse proxy and `COOKIE_SECURE=true`.
 
-1. Panel parolasıyla giriş yapın; başlık ve anlatım metnini girin.
-2. **Sahneleri hazırla** ile sahneleri oluşturun ve başlıkları gözden geçirin.
-3. İstediğiniz sahnede **Stok görüntü seç** ile Pixabay'te arayın (ör. `city`,
-   `saving money`); klibi seçin. Görüntüler dikey kadraja kırpılır, kısa klipler
-   tekrar edilir, stok klibin orijinal sesi kullanılmaz.
-4. Sessiz demo veya ElevenLabs seslendirmesini seçin. **Sesleri getir** hesabın
-   erişebildiği sesleri listeler; seslendirme kredi kullanır.
-5. **Videoyu oluştur** düğmesine basın. Hazır olunca önizleyin ve MP4'ü indirin.
-   **Kaynaklar** bağlantısı kliplerin Pixabay kimliğini, sahibini ve sayfasını içerir.
+Keep existing ElevenLabs values. Add only missing settings to `.env` or your
+hosting service's environment. Never put real keys in `.env.example` or GitHub.
+The Docker build excludes `.env`, Git metadata, dependencies and generated videos.
+GitHub Actions secrets are not automatically injected into a Render service.
+Restart/redeploy after changing environment variables.
 
-### Sağlayıcı ve sunucu ayarları
-
-Mevcut `.env` dosyasını yeniden oluşturmayın veya `.env.example` ile değiştirmeyin.
-Yalnız `PIXABAY_API_KEY=...` satırını ekleyin; mevcut `ELEVENLABS_API_KEY` ve
-`ELEVENLABS_VOICE_ID` değerlerini koruyun. Ortam değişkenlerini değiştirdikten
-sonra sunucuyu yeniden başlatın.
-
-Anahtarları yalnız `.env` veya sunucunun güvenli ortam ayarlarına ekleyin.
-Tarayıcıya anahtar gönderilmez. GitHub Actions secrets veya başka bir platforma
-eklenen değerler bu çalışan uygulamaya kendiliğinden aktarılmaz.
-
-| Değişken | Gereklilik |
+| Variable | Purpose |
 | --- | --- |
-| `PANEL_PASSWORD` | Panel için zorunlu, 12–256 karakter; API anahtarıyla aynı değer olmasın |
-| `PIXABAY_API_KEY` | Stok arama ve indirme için gerekli; [Pixabay API](https://pixabay.com/api/docs/) üzerinden alınır |
-| `ELEVENLABS_API_KEY` | İsteğe bağlı seslendirme için gerekli |
-| `ELEVENLABS_VOICE_ID` | Varsayılan ses; panelden de ses seçilebilir |
-| `HOST`, `PORT` | Varsayılan `127.0.0.1`, `3000` |
-| `COOKIE_SECURE` | HTTPS dağıtımında `true`; yerel HTTP için `false` |
-| `RENDER_WIDTH`, `RENDER_FPS` | `540` veya `1080`; `15` veya `30` (varsayılan 540/15) |
+| `ELEVENLABS_API_KEY` | Optional narration and voice listing; server-side only |
+| `ELEVENLABS_VOICE_ID` | Optional default voice; the panel can select or accept a voice ID |
+| `ELEVENLABS_MODEL` | Default: `eleven_multilingual_v2` |
+| `PIXABAY_API_KEY` | Stock search/download; obtain at https://pixabay.com/api/docs/ |
+| `PANEL_AUTH_ENABLED` | Default false for temporary public testing |
+| `PANEL_PASSWORD` | Required only when login is enabled; 12–256 characters |
+| `HOST`, `PORT` | Defaults: `127.0.0.1`, `3000`; Render uses `0.0.0.0`, `10000` |
+| `COOKIE_SECURE` | True behind HTTPS, false for local HTTP |
+| `RENDER_WIDTH`, `RENDER_FPS` | Width 540/1080; fps 15/30; defaults 540/15 |
+| `CHROME_PATH` | Optional explicit browser executable |
+| `PLAYWRIGHT_BROWSERS_PATH` | Optional Playwright browser cache |
 
-Ağ erişimi: `pixabay.com`, `cdn.pixabay.com` ve
-`api.elevenlabs.io`. Diğer Pixabay medya alt alanlarına yönlenen bir klip hata
-verirse o alanı doğrulayıp ağ ayarlarına ekleyin. HTTP yönlendirmeleri otomatik
-takip edilmez; yalnız HTTPS Pixabay medya adresleri indirilir. Stok dosyaları
-100 MB ile sınırlıdır. [Pixabay lisansını](https://pixabay.com/service/license-summary/) ve klibin
-kullanım koşullarını yayınlamadan önce kontrol edin.
+`playwright-core` does not install a browser. The renderer tries `CHROME_PATH`,
+Playwright's browser cache, `/usr/bin/chromium`, and `/usr/bin/google-chrome`.
+The Dockerfile installs Chromium and FFmpeg. It runs as an unprivileged user;
+Chromium uses `--no-sandbox`, so run trusted projects in an isolated environment.
 
-Panel Node.js **24.5+** kullanır; `npm start` yönetilen bulut ortamlarının
-HTTP proxy ayarlarını Node'un yerleşik `--use-env-proxy` seçeneğiyle kullanır.
-Parola yerel süreçte okunabilen bir ortam değişkeni olmalıdır; yalnız uzak HTTPS
-isteklerine anahtar enjekte eden proxy bağlantısı panel parolası için uygun değildir.
+## ElevenLabs voices troubleshooting
 
-### Barındırma
+Selecting **ElevenLabs narration** automatically loads voices from your account.
+**Refresh voices** retries. Voice listing uses the paginated `/v2/voices` API.
 
-Bu uygulama Chromium ve FFmpeg çalıştırabilen, kalıcı diski olan bir Node.js
-sunucusunda çalışır. GitHub Pages gibi yalnız statik dosya sunan hizmetler uygun
-değildir. Uzak erişim için `HOST=0.0.0.0`, `PORT` ve `COOKIE_SECURE=true` ayarlayın;
-önünde HTTPS ters proxy kullanın. İşlem yöneticisiyle `npm start` komutunu yeniden
-başlatılabilir tutun. Anahtarları ve parolayı barındırma hizmetinin güvenli
-ayarlarından verin. Bu değişiklik bir alan adına canlı dağıtım yapmaz.
+- Missing key: add `ELEVENLABS_API_KEY` in **Render → Environment**, then redeploy.
+- Rejected key: verify the key in that service's environment, not a GitHub file.
+- Missing permissions: enable **Voices: Read** for listing and **Text to Speech**
+  for narration on the ElevenLabs API key.
+- Empty list: add a voice to your ElevenLabs account, then refresh.
+- Restricted listing: enter an accessible voice ID directly; a configured
+  `ELEVENLABS_VOICE_ID` is preserved even if it is absent from the returned list.
+- Network errors: allow HTTPS access to `api.elevenlabs.io`.
 
-Bir seferde bir render çalışır, en fazla beş iş sırada/çalışır durumda tutulur.
-İşler `out/jobs/<id>/` altında saklanır; tamamlanan videolar yeniden başlatmadan
-sonra görünür, yarım kalan işler hata olarak işaretlenir. Oturumlar yeniden giriş
-gerektirir. Render başına 30 dakika sınırı vardır. Disk kullanımı için eski iş
-klasörlerini uygulama duruyken temizleyin; `out/` klasörünü kullanıcı içeriği
-olarak koruyun ve gerektiğinde yedekleyin.
+Provider failures are shown inline in English and do not trigger studio login.
+The “key configured” label reports presence only; it does not validate access.
+Your key is never sent to the browser, included in credits or echoed in errors.
+Voice listing is read-only; generating narration uses ElevenLabs credits.
 
-### Testler
+## CLI rendering
 
-```bash
-npm test
-```
-
-Testler Chromium ve FFmpeg gerektirir. Sahne zamanlaması, sağlayıcı yanıtlarının
-ayrıştırılması, medya adresi doğrulaması ve tarayıcı üzerinden parola, stok seçimi,
-gerçek MP4 renderı, HTTP Range indirme, oturum kapatma ve mobil taşma kontrolü
-çalışır. Testlerde Pixabay yanıtı ve klibi yerel fixture ile sağlanır; canlı API
-anahtarı veya ücretli ElevenLabs çağrısı kullanılmaz. Ekran görüntüleri
-`out/panel-desktop.png` ve `out/panel-mobile.png` altında üretilir.
-
-## Kurulum
-
-Bu depo `mfs-motion-engine-v2.zip` içindeki v2 motorunu içerir. Node.js **24.5+**,
-Chromium/Google Chrome ve `libx264` kodlayıcılı FFmpeg gerekir. Sürekli çalışan bir
-web servisi veya veritabanı gerekmez. Komutları repository kökünde çalıştırın.
-
-```bash
-npm ci
-# Debian / Ubuntu üzerinde tarayıcı ve video araçları yoksa:
-sudo apt-get update
-sudo apt-get install -y chromium ffmpeg
-[ -f .env ] || cp .env.example .env
-```
-
-`playwright-core` tarayıcıyı otomatik indirmez. Motor önce `CHROME_PATH`, sonra
-Playwright tarayıcı dizini, ardından `/usr/bin/chromium` ve `/usr/bin/google-chrome`
-yollarını dener. macOS/Windows veya farklı kurulumlarda `.env` içinde `CHROME_PATH`
-ile tarayıcının tam yolunu belirtin. `ffmpeg` PATH üzerinde bulunmalıdır.
-
-## Çalıştırma
-
-API anahtarı gerektirmeyen, sessiz örnek render:
+Silent example with synthetic word timings:
 
 ```bash
 npm run render -- --project examples/rates/project.json --words examples/rates/words.json --width 540 --fps 15 --out out/rates.mp4
 ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration out/rates.mp4
 ```
 
-Diğer örnekler için `rates` yerine `mortgage` veya `dotcom` kullanın. Örneklerdeki
-`words.json` dosyaları yapay kelime zamanlamalarıdır; ses dosyası içermezler.
-Üretim çözünürlüğü için `--width 1080 --fps 30` kullanın (varsayılanlar).
-Tek kare PNG ve sabit görünüm:
+Other examples: `examples/mortgage` and `examples/dotcom`. Defaults: 1080 px, 30 fps.
+Render a PNG:
 
 ```bash
 npm run render -- --project examples/mortgage/project.json --words examples/mortgage/words.json --still 4.4 --seed demo --width 540 --out out/frame.png
 ```
 
-`--seed` görünümü belirler. Video renderları son görünümleri `.looks-log.json`
-içinde tutar ve tekrarları önler; tamamen tekrarlanabilir görünüm için aynı seed
-ile `--no-avoid` kullanın. Seçilen görünüm videonun yanındaki `.look.json` dosyasına
-yazılır. Çıktı klasörleri otomatik oluşturulur.
-
-## Ortam değişkenleri ve seslendirme
-
-`npm run render` ve `npm run tts`, varsa kökteki `.env` dosyasını okur; önceden
-export edilen değerler önceliklidir. Doğrudan `node` çağırırken
-`node --env-file=.env ...` kullanın.
-
-| Değişken | Kullanım |
-| --- | --- |
-| `CHROME_PATH` | İsteğe bağlı Chromium/Chrome çalıştırılabilir dosyası |
-| `PLAYWRIGHT_BROWSERS_PATH` | İsteğe bağlı Playwright tarayıcı önbelleği |
-| `ELEVENLABS_API_KEY` | Yalnız TTS için gerekli gizli API anahtarı |
-| `ELEVENLABS_VOICE_ID` | Yalnız TTS için gerekli, kullanım izniniz olan ses kimliği |
-| `ELEVENLABS_MODEL` | TTS modeli; varsayılan `eleven_multilingual_v2` |
-
-Gerçek anahtarı yalnız `.env` içine veya ortamın güvenli ayarlarına girin.
-`.env.example` gerçek anahtar içermez. `.env`, bağımlılıklar, ses/video çıktıları
-ve görünüm geçmişi `.gitignore` ile hariç tutulur. Anahtarları kaynak koduna yazmayın.
-
-ElevenLabs erişimi (`api.elevenlabs.io`) ve uygun kredi gerektiren isteğe bağlı TTS:
+Generate narration using your configured key and voice, then use its real timings:
 
 ```bash
 npm run tts -- examples/mortgage/script.txt out/mortgage
 npm run render -- --project examples/mortgage/project.json --words out/mortgage/words.json --audio out/mortgage/narration.mp3 --out out/mortgage.mp4
 ```
 
-TTS hem `narration.mp3` hem gerçek hizalamaya dayalı `words.json` üretir. Gerçek
-sesle render alırken bu kelime zamanlamalarını kullanın.
+Npm scripts load optional `.env`. For direct Node commands use `node --env-file=.env`.
+The CLI writes a `.look.json` sidecar and retains recent looks in `.looks-log.json`.
+Use a fixed `--seed` and `--no-avoid` for a repeatable look. The renderer serves
+local assets over temporary loopback HTTP and closes its server after completion.
 
-## Sorun giderme
+## Operations and tests
 
-- `Chromium not found`: Chromium kurun veya `CHROME_PATH` belirtin.
-- `ffmpeg` bulunamıyorsa FFmpeg kurulumunu ve PATH değerini kontrol edin.
-- Kısıtlı bulut yürütmesinde Chromium başlatma hatası oluşursa tarayıcı çalıştırma
-  izni olan yürütme kullanın. Motor sahneyi geçici `127.0.0.1` HTTP sunucusundan
-  yükler; `file://` erişimine ihtiyaç duymaz ve işlem bitince sunucuyu kapatır.
-- Motor Chromium'u `--no-sandbox` ile başlatır; güvenilir proje ve varlıklarla,
-  izole bir geliştirme ortamında kullanın.
+One render runs at a time, with at most five active/queued jobs. Jobs, media,
+credits and logs are stored in `out/jobs/<id>/`. On persistent storage, completed
+jobs survive restarts; unfinished jobs become failed. Sessions require login again.
+Each render has a 30-minute limit. Clean up old job directories while the app is
+stopped, and back up user content if needed. `/healthz` is a public health check.
 
-## Doğrulama
+```bash
+npm test
+```
 
-Bu bulut ortamında Node.js 24.19.0 ile `npm ci` tekrar çalıştırıldı; `rates`,
-`mortgage`, `dotcom` örneklerinin tamamı 540×960 / 15 fps H.264 MP4 olarak
-üretildi ve FFprobe ile kontrol edildi (yaklaşık 11.33 / 17.27 / 13.27 saniye).
-Tek kare PNG çıktısı da kontrol edildi. Gerçek ElevenLabs çağrısı, API anahtarı
-bulunmadığı için çalıştırılmadı.
+Tests exercise real Chromium and FFmpeg, desktop/mobile layout, login and public
+mode, script planning, manual and automatic stock selection, rendering, MP4 Range
+downloads, and voice-list error handling. Provider tests use fixtures; passing
+them does not establish live Pixabay or ElevenLabs access. Test screenshots are
+written to `out/panel-desktop.png` and `out/panel-mobile.png`.
 
-## What is locked (brand)
-Inter 800/900, "MONEY FROM SCRATCH" wordmark on every scene, dark base, caption position/size, safe zones, all-caps labels.
+Network hosts: `api.elevenlabs.io`, `pixabay.com`, `cdn.pixabay.com`. Pixabay results
+are cached in memory for 24 hours, downloads are capped at 100 MB, and only HTTPS
+Pixabay media hosts are accepted without redirects. Check the
+[Pixabay license](https://pixabay.com/service/license-summary/) before publishing.
 
-## What varies (src/stage/variation.js)
-**Per video (from `seed`)**: accent palette (6), dark tone (5), background (grid/dots/diagonal/aurora/blueprint/scan), caption highlight (pop/bar/underline/box),
-camera (push/drift/tilt/static), scene transition (fade/slide/zoom/wipe/cut), title style (center/left/boxed/kicker).
-**Per scene (never repeats the previous scene)**: card style (glass/outline/solid/neon/none), entrance (rise/pop/slide/drop/wipe/flip),
-glyph style (line/duo/solid/iso/badge), chart style, count-up style, template layout.
-Same seed = same look (reproducible). Change `seed` in project.json or pass `--seed`. Pin anything with `"look": {"accent":"cyan","bg":"blueprint",...}`.
+## Motion engine
 
-## Templates (src/stage/templates)
-chart-step (real data series) · big-number (meter ring/bar, glyph or PNG hero) · compare (bars-v / bars-h / versus) · flow (chain / loop / hub) · grid (tiles / rows)
-Add one: create `templates/<name>.js` exposing `layouts`, `mount`, `update`, register it in stage.html, use `"template"` in project.json.
+Brand constants: Inter 800/900, Money From Scratch wordmark, dark background,
+caption placement and safe zones. Seeded variation controls palettes, backgrounds,
+transitions, title styles, cards and layouts.
 
-## Assets
-Glyphs are procedural (18 icons x 5 styles). For richer art put a transparent PNG in `data.asset: {"src": "path.png"}` (big-number hero slot today).
-Factual numbers must come from data/sources; keep the `source` line on every data scene.
+Templates: `story` (text and optional video), `chart-step`, `big-number`, `compare`,
+`flow`, `grid`. Templates expose `layouts`, `mount`, `update`, and optional async
+`seek` for media. Register new templates in `src/stage/stage.html`.
+Factual values in supplied examples must be verified before publication.

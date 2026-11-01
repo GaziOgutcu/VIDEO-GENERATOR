@@ -8,7 +8,7 @@ export class PixabayStock {
     this.key = key; this.fetcher = fetcher; this.cache = new Map();
   }
   async api(params) {
-    if (!this.key) throw new Error('Stok araması için sunucuda PIXABAY_API_KEY tanımlayın. Mevcut ElevenLabs ayarlarını değiştirmeyin.');
+    if (!this.key) throw new Error('Add PIXABAY_API_KEY to the server environment for footage search. Keep your existing ElevenLabs settings.');
     const query = new URLSearchParams({ ...params, key: this.key, safesearch: 'true' });
     const cacheKey = new URLSearchParams(params).toString();
     const cached = this.cache.get(cacheKey);
@@ -16,10 +16,10 @@ export class PixabayStock {
     let res;
     try {
       res = await this.fetcher(`https://pixabay.com/api/videos/?${query}`, { redirect: 'error', signal: AbortSignal.timeout(20000) });
-    } catch { throw new Error('Pixabay bağlantısı kurulamadı. Sunucunun ağ erişimini kontrol edin.'); }
-    if (!res.ok) throw new Error(`Pixabay isteği başarısız (${res.status}). Anahtarı ve kullanım kotasını kontrol edin.`);
+    } catch { throw new Error('Could not connect to Pixabay. Check server network access.'); }
+    if (!res.ok) throw new Error(`Pixabay request failed (${res.status}). Check the API key and usage quota.`);
     let data;
-    try { data = await res.json(); } catch { throw new Error('Pixabay yanıtı okunamadı.'); }
+    try { data = await res.json(); } catch { throw new Error('Could not read the Pixabay response.'); }
     // Pixabay asks clients to cache API results for 24 hours; bound memory use.
     for (const [key, entry] of this.cache) if (entry.expires <= Date.now()) this.cache.delete(key);
     if (this.cache.size >= 200) this.cache.delete(this.cache.keys().next().value);
@@ -37,18 +37,18 @@ export class PixabayStock {
     return (data.hits || []).map(v => this.normalize(v)).filter(Boolean).map(({ download, ...v }) => v);
   }
   async download(id, destination) {
-    if (!/^\d{1,16}$/.test(String(id))) throw new Error('Stok kimliği geçersiz.');
+    if (!/^\d{1,16}$/.test(String(id))) throw new Error('Invalid stock video ID.');
     const data = await this.api({ id: String(id) });
     const video = this.normalize((data.hits || []).find(v => String(v.id) === String(id)) || {});
-    if (!video) throw new Error('İndirilebilir MP4 bulunamadı.');
+    if (!video) throw new Error('No downloadable MP4 was found.');
     const url = new URL(video.download);
-    if (url.protocol !== 'https:' || !(url.hostname === 'pixabay.com' || url.hostname.endsWith('.pixabay.com')) || url.username || url.password || url.port) throw new Error('Stok medya adresi doğrulanamadı.');
+    if (url.protocol !== 'https:' || !(url.hostname === 'pixabay.com' || url.hostname.endsWith('.pixabay.com')) || url.username || url.password || url.port) throw new Error('Stock media URL could not be verified.');
     let res;
     try { res = await this.fetcher(url, { redirect: 'error', signal: AbortSignal.timeout(120000) }); }
-    catch { throw new Error('Pixabay klibi indirilemedi. Medya sunucusunun ağ erişimini kontrol edin.'); }
-    if (!res.ok || !res.body) throw new Error(`Stok indirme başarısız (${res.status}).`);
+    catch { throw new Error('Could not download the Pixabay clip. Check network access to the media server.'); }
+    if (!res.ok || !res.body) throw new Error(`Stock download failed (${res.status}).`);
     let size = 0;
-    const limit = new Transform({ transform(chunk, encoding, callback) { size += chunk.length; callback(size > 100 * 1024 * 1024 ? new Error('Stok klip 100 MB sınırını aşıyor.') : null, chunk); } });
+    const limit = new Transform({ transform(chunk, encoding, callback) { size += chunk.length; callback(size > 100 * 1024 * 1024 ? new Error('Stock clip exceeds the 100 MB limit.') : null, chunk); } });
     try { await pipeline(Readable.fromWeb(res.body), limit, createWriteStream(destination)); }
     catch (error) { await fs.rm(destination, { force: true }); throw error; }
     const { download, ...credit } = video;

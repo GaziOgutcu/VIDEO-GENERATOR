@@ -30,9 +30,9 @@ export async function selectAutomaticStock(scenes, stock, progress = async () =>
         if (picked) { scene.query = query; break; }
       }
       if (picked) { scene.stockId = String(picked.id); used.add(scene.stockId); }
-      else warnings.push(`Sahne ${i + 1}: stok bulunamadı; hareketli metin kullanıldı.`);
+      else warnings.push(`Scene ${i + 1}: no stock match found; motion text was used.`);
     } catch (error) {
-      warnings.push(`Otomatik stok araması durdu: ${error.message} Seçilmeyen sahneler hareketli metin kullanacak.`);
+      warnings.push(`Automatic footage search stopped: ${error.message} Scenes without selected clips will use motion text.`);
       break;
     }
   }

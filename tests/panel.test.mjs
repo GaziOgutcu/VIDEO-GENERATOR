@@ -34,6 +34,18 @@ test('authenticated panel plans, selects stock, renders, previews and downloads 
     await page.goto(origin);
     await page.locator('#password').fill(password); await page.locator('#login-form button').click();
     await page.locator('#studio').waitFor({ state: 'visible' });
+    assert.equal(await page.locator('html').getAttribute('lang'), 'en');
+    await page.route('**/api/voices', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ voices: [{ id: 'fixture_voice', name: 'Test narrator' }] }) }));
+    await page.locator('#narration').selectOption('true');
+    await page.waitForFunction(() => document.getElementById('voice-message').textContent.includes('1 voices loaded'));
+    assert.equal(await page.locator('#voice option[value=fixture_voice]').textContent(), 'Test narrator');
+    await page.unroute('**/api/voices');
+    await page.route('**/api/voices', route => route.fulfill({ status: 502, contentType: 'application/json', body: JSON.stringify({ error: 'Enable Voices: Read on your ElevenLabs API key.' }) }));
+    await page.locator('#load-voices').click();
+    await page.waitForFunction(() => document.getElementById('voice-message').textContent.includes('Voices: Read'));
+    assert.equal(await page.locator('#studio').isVisible(), true);
+    await page.locator('#voice-id').fill('direct_voice_id');
+    await page.locator('#narration').selectOption('false');
     await page.locator('#title').fill('Panel integration check');
     await page.locator('#script').fill('Small steps matter.');
     await page.locator('#plan').click();
@@ -41,7 +53,7 @@ test('authenticated panel plans, selects stock, renders, previews and downloads 
     await page.locator('.scene-media button').click();
     await page.locator('#stock-query').fill('city'); await page.locator('#stock-form button').click();
     await page.locator('.stock-card button').click();
-    assert.equal(await page.locator('.scene-card .section-heading').innerText(), 'SAHNE 01\nSTOK GÖRÜNTÜ');
+    assert.equal(await page.locator('.scene-card .section-heading').innerText(), 'SCENE 01\nSTOCK FOOTAGE');
     const [createdResponse] = await Promise.all([page.waitForResponse(response => response.url() === origin + '/api/jobs' && response.request().method() === 'POST'), page.locator('#render').click()]);
     const created = await createdResponse.json();
     assert.equal(createdResponse.status(), 202); jobId = created.id;
