@@ -17,7 +17,7 @@ test('authenticated panel plans, selects stock, renders, previews and downloads 
     search: async query => { assert.equal(query, 'city'); return [{ id: '42', thumbnail: '/fixture-thumbnail.png', url: 'https://pixabay.com/video/42/', author: 'Offline fixture', duration: 3, width: 270, height: 480 }]; },
     download: async (id, destination) => { assert.equal(id, '42'); await fs.copyFile(fixture, destination); return { id, author: 'Offline fixture', url: 'https://pixabay.com/video/42/' }; },
   };
-  const { server, queue } = await createApp({ password, stock, renderWidth: 270, renderFps: 5 });
+  const { server, queue } = await createApp({ authEnabled: true, password, stock, renderWidth: 270, renderFps: 5 });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const origin = `http://127.0.0.1:${server.address().port}`;
   let browser, jobId;
@@ -72,4 +72,17 @@ test('authenticated panel plans, selects stock, renders, previews and downloads 
     await browser?.close(); await new Promise(resolve => server.close(resolve));
     if (jobId) await fs.rm(path.join(root, 'out/jobs', jobId), { recursive: true, force: true });
   }
+});
+
+test('temporary public mode opens the panel without password and keeps mutation origin checks', async () => {
+  const { server } = await createApp({ authEnabled: false, password: undefined });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const config = await (await fetch(base + '/api/config')).json();
+    assert.equal(config.authEnabled, false);
+    assert.equal('password' in config, false);
+    assert.equal((await fetch(base + '/api/jobs')).status, 200);
+    assert.equal((await fetch(base + '/api/plan', { method: 'POST', body: '{}' })).status, 403);
+  } finally { await new Promise(resolve => server.close(resolve)); }
 });

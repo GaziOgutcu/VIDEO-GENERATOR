@@ -2,6 +2,15 @@
 
 Deterministic (`seek(t)`) DOM/SVG/Canvas renderer. **Brand is locked, everything else varies per seed.**
 
+## Geçici parolasız test modu
+
+Parola kontrolü şu an varsayılan olarak kapalıdır; panel adresi doğrudan açılır.
+`PANEL_PASSWORD` ve ElevenLabs/Pixabay anahtarları silinmez. Girişi tekrar açmak
+istediğinizde sunucuda `PANEL_AUTH_ENABLED=true` ayarlayıp yeniden dağıtın.
+Bu modda adresi bilen herkes videolara ve üretim özelliklerine erişebilir;
+bağlı servislerde kredi harcayabilir. Aşağıdaki parola adımları yalnız giriş
+tekrar etkinleştirildiğinde geçerlidir.
+
 ## Ücretsiz web adresiyle yayınla (Render)
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/GaziOgutcu/VIDEO-GENERATOR)

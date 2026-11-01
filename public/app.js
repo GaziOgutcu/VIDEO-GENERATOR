@@ -9,7 +9,7 @@ async function api(url, options = {}) {
 function notice(text) { $('notice').textContent = text; $('notice').hidden = !text; }
 function showLogin() { $('login').hidden = false; $('studio').hidden = true; clearInterval(polling); }
 async function enter() {
-  config = await api('/api/config'); $('login').hidden = true; $('studio').hidden = false;
+  config = await api('/api/config'); $('logout').hidden = !config.authEnabled; $('login').hidden = true; $('studio').hidden = false;
   $('resolution').textContent = `${config.width} × ${Math.round(config.width * 16 / 9)}`;
   $('provider-status').textContent = `Pixabay: ${config.stock ? 'bağlı' : 'anahtar gerekli'} · ElevenLabs: ${config.narration ? 'bağlı' : 'anahtar gerekli'}`;
   if (config.defaultVoice) $('voice').add(new Option('Varsayılan ses', config.defaultVoice));

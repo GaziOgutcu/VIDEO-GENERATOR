@@ -12,9 +12,9 @@ async function body(req) {
   let text = ''; for await (const chunk of req) { text += chunk; if (text.length > 64000) throw new Error('İstek çok büyük.'); }
   return JSON.parse(text || '{}');
 }
-export async function createApp({ password = process.env.PANEL_PASSWORD, stock = new PixabayStock(), workspace = root, renderWidth = 540, renderFps = 15 } = {}) {
-  if (!password || password.length < 12 || password.length > 256) throw new Error('PANEL_PASSWORD en az 12, en fazla 256 karakter olmalı. Güvenli ortam ayarlarında tanımlayın.');
-  const salt = randomBytes(16), hash = scryptSync(password, salt, 32), sessions = new Map(), attempts = new Map();
+export async function createApp({ authEnabled = process.env.PANEL_AUTH_ENABLED === 'true', password = process.env.PANEL_PASSWORD, stock = new PixabayStock(), workspace = root, renderWidth = 540, renderFps = 15 } = {}) {
+  if (authEnabled && (!password || password.length < 12 || password.length > 256)) throw new Error('PANEL_PASSWORD en az 12, en fazla 256 karakter olmalı. Güvenli ortam ayarlarında tanımlayın.');
+  const salt = randomBytes(16), hash = authEnabled ? scryptSync(password, salt, 32) : null, sessions = new Map(), attempts = new Map();
   const queue = new JobQueue({ root: workspace, stock, renderWidth, renderFps }); await queue.init();
   const server = createServer(async (req, res) => {
     res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://cdn.pixabay.com https://pixabay.com; media-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
@@ -26,6 +26,7 @@ export async function createApp({ password = process.env.PANEL_PASSWORD, stock =
       if (mutation && (req.headers['x-requested-with'] !== 'mfs-panel' || (req.headers.origin && new URL(req.headers.origin).host !== req.headers.host))) return json(res, 403, { error: 'Geçersiz istek kaynağı.' });
       if (route === '/healthz' && req.method === 'GET') return json(res, 200, { ok: true });
       if (route === '/api/login' && req.method === 'POST') {
+        if (!authEnabled) return json(res, 200, { ok: true });
         const ip = req.socket.remoteAddress;
         const now = Date.now();
         for (const [key, value] of attempts) if (now - value.since > 15 * 60 * 1000) attempts.delete(key);
@@ -44,9 +45,9 @@ export async function createApp({ password = process.env.PANEL_PASSWORD, stock =
       if (/^\/fonts\/inter-latin-(400|600|700|900)-normal\.woff2$/.test(route) && ['GET', 'HEAD'].includes(req.method)) return await sendFile(req, res, path.join(root, 'node_modules/@fontsource/inter/files', route.split('/').at(-1)));
       if (route === '/favicon.ico') { res.writeHead(204).end(); return; }
       const token = /(?:^|;\s*)mfs_session=([a-f0-9]{64})(?:;|$)/.exec(req.headers.cookie || '')?.[1];
-      if (!token || !sessions.has(token) || sessions.get(token) < Date.now()) return json(res, 401, { error: 'Oturum açın.' });
+      if (authEnabled && (!token || !sessions.has(token) || sessions.get(token) < Date.now())) return json(res, 401, { error: 'Oturum açın.' });
       if (route === '/api/logout' && req.method === 'POST') { sessions.delete(token); res.setHeader('Set-Cookie', 'mfs_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0'); return json(res, 200, { ok: true }); }
-      if (route === '/api/config' && req.method === 'GET') return json(res, 200, { stock: Boolean(process.env.PIXABAY_API_KEY), narration: Boolean(process.env.ELEVENLABS_API_KEY), defaultVoice: process.env.ELEVENLABS_VOICE_ID || '', width: renderWidth, fps: renderFps });
+      if (route === '/api/config' && req.method === 'GET') return json(res, 200, { authEnabled, stock: Boolean(process.env.PIXABAY_API_KEY), narration: Boolean(process.env.ELEVENLABS_API_KEY), defaultVoice: process.env.ELEVENLABS_VOICE_ID || '', width: renderWidth, fps: renderFps });
       if (route === '/api/voices' && req.method === 'GET') {
         if (!process.env.ELEVENLABS_API_KEY) throw new Error('ELEVENLABS_API_KEY tanımlı değil.');
         const response = await fetch('https://api.elevenlabs.io/v1/voices', { headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY }, redirect: 'error', signal: AbortSignal.timeout(20000) });

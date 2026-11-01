@@ -15,5 +15,7 @@ services:
         value: "540"
       - key: RENDER_FPS
         value: "15"
+      - key: PANEL_AUTH_ENABLED
+        value: "false"
       - key: PANEL_PASSWORD
         generateValue: true
