@@ -22,7 +22,7 @@ export function validateScenes(scenes) {
     if (!sc || typeof sc.title !== 'string' || typeof sc.text !== 'string' || !sc.text.trim() || sc.text.length > 600 || sc.title.length > 100) throw new Error('Sahne başlığı veya metni geçersiz.');
     length += sc.text.length;
     if (sc.stockId != null && !/^\d{1,16}$/.test(String(sc.stockId))) throw new Error('Stok kimliği geçersiz.');
-    return { title: sc.title.trim(), text: sc.text.trim(), stockId: sc.stockId == null ? null : String(sc.stockId) };
+    return { title: sc.title.trim(), text: sc.text.trim(), stockId: sc.stockId == null ? null : String(sc.stockId), skipStock: sc.skipStock === true };
   });
   if (length > 6000) throw new Error('Toplam metin 6000 karakteri aşamaz.');
   return result;

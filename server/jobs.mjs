@@ -3,6 +3,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { compileProject } from './planner.mjs';
+import { selectAutomaticStock } from './auto-stock.mjs';
 import { narrate } from './narration.mjs';
 
 export class JobQueue {
@@ -44,6 +45,12 @@ export class JobQueue {
   async run(job, input) {
     const dir = path.join(this.directory, job.id);
     job.status = 'preparing'; job.message = 'Sahneler hazırlanıyor'; await this.save(job);
+    job.warnings = [];
+    if (input.autoStock) {
+      job.warnings = await selectAutomaticStock(input.scenes, this.stock, async (index, total) => {
+        job.message = `Stok görüntüler otomatik seçiliyor (${index}/${total})`; await this.save(job);
+      });
+    }
     const script = input.scenes.map(sc => sc.text).join(' ');
     await fs.writeFile(path.join(dir, 'script.txt'), script);
     let words;
@@ -84,6 +91,6 @@ export class JobQueue {
         code === 0 ? resolve() : reject(new Error('Render tamamlanamadı. Sunucudaki render.log dosyasını kontrol edin.'));
       });
     });
-    job.status = 'done'; job.progress = 100; job.message = 'Video hazır'; await this.save(job);
+    job.status = 'done'; job.progress = 100; job.message = job.warnings.length ? 'Video hazır · ' + job.warnings.join(' ') : 'Video hazır'; await this.save(job);
   }
 }

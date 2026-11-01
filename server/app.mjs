@@ -61,11 +61,11 @@ export async function createApp({ authEnabled = process.env.PANEL_AUTH_ENABLED =
       }
       if (route === '/api/jobs' && req.method === 'GET') return json(res, 200, { jobs: queue.list() });
       if (route === '/api/jobs' && req.method === 'POST') {
-        const input = await body(req), scenes = validateScenes(input.scenes);
+        const input = await body(req), scenes = validateScenes(input.scenes ?? planScript(input.script));
         if (typeof input.narration !== 'boolean') throw new Error('Seslendirme tercihi geçersiz.');
         const voice = input.voice || process.env.ELEVENLABS_VOICE_ID;
         if (input.narration && (!process.env.ELEVENLABS_API_KEY || !/^[A-Za-z0-9_-]{1,100}$/.test(voice || ''))) throw new Error('Seslendirme için API anahtarı ve geçerli bir ses gerekli.');
-        return json(res, 202, await queue.create({ scenes, narration: input.narration, voice, title: String(input.title || 'Yeni video').slice(0, 100), seed: String(input.seed || 'mfs-panel').slice(0, 100) }));
+        return json(res, 202, await queue.create({ scenes, autoStock: input.autoStock !== false, narration: input.narration, voice, title: String(input.title || 'Yeni video').slice(0, 100), seed: String(input.seed || 'mfs-panel').slice(0, 100) }));
       }
       const jobMatch = /^\/api\/jobs\/([a-f0-9-]{36})$/.exec(route);
       if (jobMatch && req.method === 'GET') { const job = queue.jobs.get(jobMatch[1]); return json(res, job ? 200 : 404, job || { error: 'Video bulunamadı.' }); }

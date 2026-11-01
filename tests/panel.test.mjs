@@ -13,8 +13,9 @@ test('authenticated panel plans, selects stock, renders, previews and downloads 
   const fixture = path.join(root, 'out', 'test-stock.mp4');
   await fs.mkdir(path.dirname(fixture), { recursive: true });
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'testsrc2=size=270x480:rate=5:duration=3', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', fixture]);
+  const searches = [];
   const stock = {
-    search: async query => { assert.equal(query, 'city'); return [{ id: '42', thumbnail: '/fixture-thumbnail.png', url: 'https://pixabay.com/video/42/', author: 'Offline fixture', duration: 3, width: 270, height: 480 }]; },
+    search: async query => { assert.ok(['city', 'saving money'].includes(query)); searches.push(query); return [{ id: '42', thumbnail: '/fixture-thumbnail.png', url: 'https://pixabay.com/video/42/', author: 'Offline fixture', duration: 3, width: 270, height: 480 }]; },
     download: async (id, destination) => { assert.equal(id, '42'); await fs.copyFile(fixture, destination); return { id, author: 'Offline fixture', url: 'https://pixabay.com/video/42/' }; },
   };
   const { server, queue } = await createApp({ authEnabled: true, password, stock, renderWidth: 270, renderFps: 5 });
@@ -64,6 +65,16 @@ test('authenticated panel plans, selects stock, renders, previews and downloads 
     await page.setViewportSize({ width: 390, height: 844 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await page.screenshot({ path: path.join(root, 'out/panel-mobile.png'), fullPage: true });
+    // A fresh script renders with automatic footage; no scene editor or stock picker is opened.
+    await page.locator('#script').fill('Saving money matters.');
+    const [automaticResponse] = await Promise.all([page.waitForResponse(response => response.url() === origin + '/api/jobs' && response.request().method() === 'POST'), page.locator('#render').click()]);
+    const automatic = await automaticResponse.json();
+    await page.waitForFunction(id => document.getElementById('video').getAttribute('src') === `/media/${id}/video.mp4` && !document.getElementById('downloads').hidden, automatic.id, { timeout: 90000 });
+    assert.ok(searches.includes('saving money'));
+    const automaticJob = queue.jobs.get(automatic.id);
+    assert.equal(automaticJob.status, 'done'); assert.equal(automaticJob.credits[0].id, '42');
+    assert.deepEqual(automaticJob.warnings, []);
+    await fs.rm(path.join(root, 'out/jobs', automatic.id), { recursive: true, force: true });
     const csrf = await fetch(`${origin}/api/plan`, { method: 'POST', headers: { Cookie: cookie, 'X-Requested-With': 'mfs-panel', Origin: 'https://untrusted.example' }, body: '{}' });
     assert.equal(csrf.status, 403);
     await page.locator('#logout').click(); await page.locator('#login').waitFor({ state: 'visible' });

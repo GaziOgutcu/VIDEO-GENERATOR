@@ -64,3 +64,18 @@ test('Pixabay network failures do not expose the API key in error messages', asy
   const provider = new PixabayStock({ key: 'fixture-private-key', fetcher: async url => { throw new Error('Request failed: ' + url); } });
   await assert.rejects(provider.search('city'), error => !error.message.includes('fixture-private-key'));
 });
+
+test('automatic stock selection derives queries, avoids duplicates and preserves manual choices', async () => {
+  const { selectAutomaticStock, stockQueries } = await import('../server/auto-stock.mjs');
+  assert.equal(stockQueries('Inflation makes your money worth less.')[0], 'finance economy');
+  const scenes = [{ text: 'Saving money helps families.', stockId: '7' }, { text: 'Savings grow over time.' }, { text: 'A house needs a mortgage.' }, { text: 'Keep this graphic.', skipStock: true }];
+  let calls = 0;
+  const warnings = await selectAutomaticStock(scenes, { search: async () => { calls++; return [{ id: '7', width: 540, height: 960 }, { id: '8', width: 540, height: 960 }, { id: '9', width: 540, height: 960 }]; } });
+  assert.equal(calls, 2); assert.equal(scenes[1].stockId, '8'); assert.equal(scenes[2].stockId, '9'); assert.equal(scenes[3].stockId, undefined); assert.deepEqual(warnings, []);
+});
+test('automatic stock failure reports a fallback instead of pretending footage was found', async () => {
+  const { selectAutomaticStock } = await import('../server/auto-stock.mjs');
+  const scenes = [{ text: 'Saving money.' }];
+  const warnings = await selectAutomaticStock(scenes, { search: async () => { throw new Error('Missing API key'); } });
+  assert.match(warnings[0], /Missing API key/); assert.equal(scenes[0].stockId, undefined);
+});

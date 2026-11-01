@@ -2,6 +2,24 @@
 
 Deterministic (`seek(t)`) DOM/SVG/Canvas renderer. **Brand is locked, everything else varies per seed.**
 
+## Otomatik script → video
+
+Metni yapıştırıp **Videoyu oluştur** düğmesine basın. Sahne düzenleyicisini açmak
+ve her sahneye medya seçmek zorunlu değildir. Varsayılan açık olan **Pixabay
+görüntülerini metinden otomatik seç** ayarı sahne metninden anahtar kelime çıkarır,
+Pixabay'de arar, mümkünse farklı klipler seçer ve indirip rendera ekler. Elle seçilmiş
+klipler korunur. Tamamen grafik video için otomatik stok seçimini kapatın.
+
+Anahtar kelime çıkarımı yerel kurallarla çalışır; yeni AI görüntü üretmez veya
+her metni anlamsal olarak kusursuz eşleştirmez. Pixabay anahtarı gerekir. Eşleşme
+bulunamazsa ya da API araması başarısızsa hareketli metne dönülür; sonuç mesajı
+bunu açıkça belirtir. Klip kaynakları **Kaynaklar** dosyasında saklanır.
+Seslendirme mevcut ElevenLabs seçiminizi kullanır; API ayarları değiştirilmez.
+
+API üzerinden de `POST /api/jobs` gövdesinde `script`, `autoStock: true`,
+`narration: false` (veya ses seçimiyle `true`) gönderilebilir. Önceden sahne
+üretmek gerekmez. Mevcut `scenes` tabanlı istekler çalışmaya devam eder.
+
 ## Geçici parolasız test modu
 
 Parola kontrolü şu an varsayılan olarak kapalıdır; panel adresi doğrudan açılır.
