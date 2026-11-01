@@ -53,7 +53,7 @@ try {
     const frames = Math.round(dur * fps);
     const inArgs = ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-i', '-'];
     const aArgs = audio ? ['-i', audio, '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-af', 'apad', '-shortest'] : [];
-    ff = spawn('ffmpeg', [...inArgs, ...aArgs, '-vf', 'scale=out_color_matrix=bt709:out_range=tv,format=yuv420p', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '17',
+    ff = spawn('ffmpeg', [...inArgs, ...aArgs, '-threads', '1', '-filter_threads', '1', '-vf', 'scale=out_color_matrix=bt709:out_range=tv,format=yuv420p', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '17',
       '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-movflags', '+faststart', '-t', dur.toFixed(3), out], { stdio: ['pipe', 'inherit', 'inherit'] });
     const done = new Promise((res, rej) => ff.once('error', rej).once('exit', c => c === 0 ? res() : rej(new Error('ffmpeg exit ' + c))));
     done.catch(() => {});

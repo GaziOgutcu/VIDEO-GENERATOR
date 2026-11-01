@@ -22,6 +22,7 @@ test('authenticated panel plans, selects stock, renders, previews and downloads 
   const origin = `http://127.0.0.1:${server.address().port}`;
   let browser, jobId;
   try {
+    const health = await fetch(`${origin}/healthz`); assert.equal(health.status, 200); assert.deepEqual(await health.json(), { ok: true });
     assert.equal((await fetch(`${origin}/api/jobs`)).status, 401);
     assert.equal((await fetch(`${origin}/.env`)).status, 401);
     assert.equal((await fetch(`${origin}/api/login`, { method: 'POST', body: '{}' })).status, 403);

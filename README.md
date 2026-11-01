@@ -2,6 +2,32 @@
 
 Deterministic (`seek(t)`) DOM/SVG/Canvas renderer. **Brand is locked, everything else varies per seed.**
 
+## Ücretsiz web adresiyle yayınla (Render)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/GaziOgutcu/VIDEO-GENERATOR)
+
+1. Yukarıdaki **Deploy to Render** düğmesini açıp Render hesabına giriş yapın;
+   GitHub reposuna erişimi onaylayın. `render.yaml` ücretsiz Docker web servisini
+   hazırlar. Oluşturma ekranında planın **Free** olduğunu doğrulayın.
+2. Kurulum tamamlanınca Render'ın verdiği `https://…onrender.com` adresini açın.
+   Domain satın almanız gerekmez. Henüz oluşturulmamış bir adres burada verilmez.
+3. Render → servis → **Environment** bölümünde otomatik oluşturulan
+   `PANEL_PASSWORD` değerini görüntüleyin; panel girişinde bu parolayı kullanın.
+4. Aynı bölüme `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` ve `PIXABAY_API_KEY`
+   değerlerinizi ekleyip kaydedin ve yeniden dağıtın. Eksik anahtarlarla sessiz,
+   stok görüntüsüz video oluşturabilirsiniz. Bu işlem mevcut yerel `.env`
+   dosyanızı değiştirmez. API anahtarlarını GitHub dosyalarına yazmayın.
+
+Ücretsiz plan deneme içindir: hareketsizlikte servis uyuyabilir, ilk açılış
+gecikebilir; disk kalıcı değildir ve yeniden dağıtım/yeniden oluşturma videoları
+silebilir. Hazır MP4'leri indirin. Chromium/FFmpeg kaynak tüketir; uzun videolar
+ücretsiz planın bellek/CPU sınırlarına takılabilir. Canlı bir domain, servis
+hesabında **Deploy** tamamlandıktan sonra oluşur; GitHub'a push tek başına servis
+oluşturmaz. Docker imajı `.env` ve üretilmiş videoları içermez. Dağıtım imajı yerelde
+512 MB bellek ve 1 CPU sınırıyla giriş, kısa sessiz video üretimi ve MP4 indirme
+akışında doğrulandı; bu sonuç uzun veya stok ağırlıklı videoların aynı sınıra
+sığacağını garanti etmez. FFmpeg iş parçacıkları bellek için birle sınırlandırılır.
+
 ## Web paneli: metinden videoya
 
 Panel tek kullanıcı içindir. Parolayla giriş yapar; metni düzenlenebilir sahnelere

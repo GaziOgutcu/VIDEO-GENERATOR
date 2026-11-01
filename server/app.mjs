@@ -24,6 +24,7 @@ export async function createApp({ password = process.env.PANEL_PASSWORD, stock =
       const route = url.pathname;
       const mutation = !['GET', 'HEAD'].includes(req.method);
       if (mutation && (req.headers['x-requested-with'] !== 'mfs-panel' || (req.headers.origin && new URL(req.headers.origin).host !== req.headers.host))) return json(res, 403, { error: 'Geçersiz istek kaynağı.' });
+      if (route === '/healthz' && req.method === 'GET') return json(res, 200, { ok: true });
       if (route === '/api/login' && req.method === 'POST') {
         const ip = req.socket.remoteAddress;
         const now = Date.now();
