@@ -5,14 +5,14 @@ Deterministic (`seek(t)`) DOM/SVG/Canvas renderer. **Brand is locked, everything
 ## Web paneli: metinden videoya
 
 Panel tek kullanıcı içindir. Parolayla giriş yapar; metni düzenlenebilir sahnelere
-böler, sahne bazında Pexels stok araması sunar, ElevenLabs ile seslendirir ve MP4
+böler, sahne bazında Pixabay stok araması sunar, ElevenLabs ile seslendirir ve MP4
 oluşturur. Stok seçilmeyen sahneler markalı hareketli metin olarak render edilir.
 Sahne planlama kural tabanlıdır; metin yazmaz, finansal veri uydurmaz ve arama
 kelimelerini otomatik tercüme etmez. Her sahnenin başlığını ve anlatımını düzenleyin.
 
 ```bash
 npm ci
-cp .env.example .env
+[ -f .env ] || cp .env.example .env
 # .env içindeki PANEL_PASSWORD değerini benzersiz, 12+ karakterlik bir parolayla doldurun.
 npm start
 ```
@@ -22,15 +22,20 @@ makinede erişilir. GitHub repository sayfası uygulamayı çalıştırmaz.
 
 1. Panel parolasıyla giriş yapın; başlık ve anlatım metnini girin.
 2. **Sahneleri hazırla** ile sahneleri oluşturun ve başlıkları gözden geçirin.
-3. İstediğiniz sahnede **Stok görüntü seç** ile Pexels'te arayın (ör. `city`,
+3. İstediğiniz sahnede **Stok görüntü seç** ile Pixabay'te arayın (ör. `city`,
    `saving money`); klibi seçin. Görüntüler dikey kadraja kırpılır, kısa klipler
    tekrar edilir, stok klibin orijinal sesi kullanılmaz.
 4. Sessiz demo veya ElevenLabs seslendirmesini seçin. **Sesleri getir** hesabın
    erişebildiği sesleri listeler; seslendirme kredi kullanır.
 5. **Videoyu oluştur** düğmesine basın. Hazır olunca önizleyin ve MP4'ü indirin.
-   **Kaynaklar** bağlantısı kliplerin Pexels kimliğini, sahibini ve sayfasını içerir.
+   **Kaynaklar** bağlantısı kliplerin Pixabay kimliğini, sahibini ve sayfasını içerir.
 
 ### Sağlayıcı ve sunucu ayarları
+
+Mevcut `.env` dosyasını yeniden oluşturmayın veya `.env.example` ile değiştirmeyin.
+Yalnız `PIXABAY_API_KEY=...` satırını ekleyin; mevcut `ELEVENLABS_API_KEY` ve
+`ELEVENLABS_VOICE_ID` değerlerini koruyun. Ortam değişkenlerini değiştirdikten
+sonra sunucuyu yeniden başlatın.
 
 Anahtarları yalnız `.env` veya sunucunun güvenli ortam ayarlarına ekleyin.
 Tarayıcıya anahtar gönderilmez. GitHub Actions secrets veya başka bir platforma
@@ -39,18 +44,18 @@ eklenen değerler bu çalışan uygulamaya kendiliğinden aktarılmaz.
 | Değişken | Gereklilik |
 | --- | --- |
 | `PANEL_PASSWORD` | Panel için zorunlu, 12–256 karakter; API anahtarıyla aynı değer olmasın |
-| `PEXELS_API_KEY` | Stok arama ve indirme için gerekli; [Pexels API](https://www.pexels.com/api/) üzerinden alınır |
+| `PIXABAY_API_KEY` | Stok arama ve indirme için gerekli; [Pixabay API](https://pixabay.com/api/docs/) üzerinden alınır |
 | `ELEVENLABS_API_KEY` | İsteğe bağlı seslendirme için gerekli |
 | `ELEVENLABS_VOICE_ID` | Varsayılan ses; panelden de ses seçilebilir |
 | `HOST`, `PORT` | Varsayılan `127.0.0.1`, `3000` |
 | `COOKIE_SECURE` | HTTPS dağıtımında `true`; yerel HTTP için `false` |
 | `RENDER_WIDTH`, `RENDER_FPS` | `540` veya `1080`; `15` veya `30` (varsayılan 540/15) |
 
-Ağ erişimi: `api.pexels.com`, `videos.pexels.com`, `images.pexels.com` ve
-`api.elevenlabs.io`. Diğer Pexels medya alt alanlarına yönlenen bir klip hata
+Ağ erişimi: `pixabay.com`, `cdn.pixabay.com` ve
+`api.elevenlabs.io`. Diğer Pixabay medya alt alanlarına yönlenen bir klip hata
 verirse o alanı doğrulayıp ağ ayarlarına ekleyin. HTTP yönlendirmeleri otomatik
-takip edilmez; yalnız HTTPS Pexels medya adresleri indirilir. Stok dosyaları
-100 MB ile sınırlıdır. [Pexels lisansını](https://www.pexels.com/license/) ve klibin
+takip edilmez; yalnız HTTPS Pixabay medya adresleri indirilir. Stok dosyaları
+100 MB ile sınırlıdır. [Pixabay lisansını](https://pixabay.com/service/license-summary/) ve klibin
 kullanım koşullarını yayınlamadan önce kontrol edin.
 
 Panel Node.js **24.5+** kullanır; `npm start` yönetilen bulut ortamlarının
@@ -83,7 +88,7 @@ npm test
 Testler Chromium ve FFmpeg gerektirir. Sahne zamanlaması, sağlayıcı yanıtlarının
 ayrıştırılması, medya adresi doğrulaması ve tarayıcı üzerinden parola, stok seçimi,
 gerçek MP4 renderı, HTTP Range indirme, oturum kapatma ve mobil taşma kontrolü
-çalışır. Testlerde Pexels yanıtı ve klibi yerel fixture ile sağlanır; canlı API
+çalışır. Testlerde Pixabay yanıtı ve klibi yerel fixture ile sağlanır; canlı API
 anahtarı veya ücretli ElevenLabs çağrısı kullanılmaz. Ekran görüntüleri
 `out/panel-desktop.png` ve `out/panel-mobile.png` altında üretilir.
 
@@ -98,7 +103,7 @@ npm ci
 # Debian / Ubuntu üzerinde tarayıcı ve video araçları yoksa:
 sudo apt-get update
 sudo apt-get install -y chromium ffmpeg
-cp .env.example .env
+[ -f .env ] || cp .env.example .env
 ```
 
 `playwright-core` tarayıcıyı otomatik indirmez. Motor önce `CHROME_PATH`, sonra

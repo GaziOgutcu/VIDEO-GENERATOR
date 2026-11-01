@@ -11,7 +11,7 @@ function showLogin() { $('login').hidden = false; $('studio').hidden = true; cle
 async function enter() {
   config = await api('/api/config'); $('login').hidden = true; $('studio').hidden = false;
   $('resolution').textContent = `${config.width} × ${Math.round(config.width * 16 / 9)}`;
-  $('provider-status').textContent = `Pexels: ${config.stock ? 'bağlı' : 'anahtar gerekli'} · ElevenLabs: ${config.narration ? 'bağlı' : 'anahtar gerekli'}`;
+  $('provider-status').textContent = `Pixabay: ${config.stock ? 'bağlı' : 'anahtar gerekli'} · ElevenLabs: ${config.narration ? 'bağlı' : 'anahtar gerekli'}`;
   if (config.defaultVoice) $('voice').add(new Option('Varsayılan ses', config.defaultVoice));
   await refreshJobs(); clearInterval(polling); polling = setInterval(() => refreshJobs().catch(error => notice(error.message)), 2500);
 }
@@ -40,16 +40,16 @@ function drawScenes() {
     const titleLabel = node('label', 'Sahne başlığı'), title = node('input'); title.value = scene.title; title.maxLength = 100; title.oninput = () => { scene.title = title.value; }; titleLabel.append(title);
     const textLabel = node('label', 'Anlatım'), text = node('textarea'); text.value = scene.text; text.maxLength = 600; text.rows = 2; text.oninput = () => { scene.text = text.value; }; textLabel.append(text); card.append(titleLabel, textLabel);
     const media = node('div', null, 'scene-media');
-    if (scene.selection) { const img = node('img'); img.src = scene.selection.thumbnail; img.alt = 'Seçilen stok görüntü'; media.append(img, link(`${scene.selection.author} / Pexels ↗`, scene.selection.url)); }
+    if (scene.selection) { const img = node('img'); img.src = scene.selection.thumbnail; img.alt = 'Seçilen stok görüntü'; media.append(img, link(`${scene.selection.author} / Pixabay ↗`, scene.selection.url)); }
     else media.append(node('span', 'Markalı metin animasyonu'));
-    const search = node('button', scene.stockId ? 'Görüntüyü değiştir' : '+ Stok görüntü seç'); search.onclick = () => { selectedScene = index; $('stock-query').value = scene.query || ''; $('stock-results').replaceChildren(); $('stock-message').textContent = config.stock ? 'Bir konu ara ve sahnen için klip seç.' : 'Pexels anahtarı henüz tanımlı değil. Sunucu ortam ayarlarına PEXELS_API_KEY ekleyin.'; $('stock-dialog').showModal(); }; media.append(search);
+    const search = node('button', scene.stockId ? 'Görüntüyü değiştir' : '+ Stok görüntü seç'); search.onclick = () => { selectedScene = index; $('stock-query').value = scene.query || ''; $('stock-results').replaceChildren(); $('stock-message').textContent = config.stock ? 'Bir konu ara ve sahnen için klip seç.' : 'Pixabay anahtarı henüz tanımlı değil. Sunucu ortam ayarlarına PIXABAY_API_KEY ekleyin.'; $('stock-dialog').showModal(); }; media.append(search);
     if (scene.stockId) { const remove = node('button', 'Kaldır', 'quiet'); remove.onclick = () => { scene.stockId = null; scene.selection = null; drawScenes(); }; media.append(remove); }
     card.append(media); $('scenes').append(card);
   });
 }
 $('close-stock').onclick = () => $('stock-dialog').close();
 $('stock-form').onsubmit = async event => {
-  event.preventDefault(); const button = event.submitter; button.disabled = true; $('stock-message').textContent = 'Pexels üzerinde aranıyor…'; $('stock-results').replaceChildren();
+  event.preventDefault(); const button = event.submitter; button.disabled = true; $('stock-message').textContent = 'Pixabay üzerinde aranıyor…'; $('stock-results').replaceChildren();
   try {
     const query = $('stock-query').value.trim(); scenes[selectedScene].query = query;
     const data = await api(`/api/stock?q=${encodeURIComponent(query)}`);
@@ -57,7 +57,7 @@ $('stock-form').onsubmit = async event => {
     for (const video of data.videos) {
       const card = node('article', null, 'stock-card'), img = node('img'); img.src = video.thumbnail; img.alt = `${video.author} tarafından stok görüntü`; img.loading = 'lazy';
       const choose = node('button', 'Bu görüntüyü seç →'); choose.onclick = () => { scenes[selectedScene].stockId = video.id; scenes[selectedScene].selection = video; drawScenes(); $('stock-dialog').close(); };
-      card.append(img, node('p', `${video.duration} sn · ${video.width} × ${video.height}`), link(`${video.author} / Pexels ↗`, video.url), choose); $('stock-results').append(card);
+      card.append(img, node('p', `${video.duration} sn · ${video.width} × ${video.height}`), link(`${video.author} / Pixabay ↗`, video.url), choose); $('stock-results').append(card);
     }
   } catch (error) { $('stock-message').textContent = error.message; } finally { button.disabled = false; }
 };

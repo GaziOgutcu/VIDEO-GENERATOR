@@ -14,8 +14,8 @@ test('authenticated panel plans, selects stock, renders, previews and downloads 
   await fs.mkdir(path.dirname(fixture), { recursive: true });
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'testsrc2=size=270x480:rate=5:duration=3', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', fixture]);
   const stock = {
-    search: async query => { assert.equal(query, 'city'); return [{ id: '42', thumbnail: '/fixture-thumbnail.png', url: 'https://www.pexels.com/video/42/', author: 'Offline fixture', duration: 3, width: 270, height: 480 }]; },
-    download: async (id, destination) => { assert.equal(id, '42'); await fs.copyFile(fixture, destination); return { id, author: 'Offline fixture', url: 'https://www.pexels.com/video/42/' }; },
+    search: async query => { assert.equal(query, 'city'); return [{ id: '42', thumbnail: '/fixture-thumbnail.png', url: 'https://pixabay.com/video/42/', author: 'Offline fixture', duration: 3, width: 270, height: 480 }]; },
+    download: async (id, destination) => { assert.equal(id, '42'); await fs.copyFile(fixture, destination); return { id, author: 'Offline fixture', url: 'https://pixabay.com/video/42/' }; },
   };
   const { server, queue } = await createApp({ password, stock, renderWidth: 270, renderFps: 5 });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
