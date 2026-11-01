@@ -1,0 +1,15 @@
+{
+  "brand": "Money From Scratch", "seed": "mortgage-rates", "tail": 1.5,
+  "scenes": [
+    { "template": "big-number", "title": "WHAT RATES DO TO A LOAN", "kicker": "THE REAL COST",
+      "timing": { "drawStart": { "word": "hundreds", "edge": "start", "offset": -0.6 }, "drawEnd": { "word": "month.", "edge": "end" } },
+      "source": "Standard 30-year fixed amortization on $400,000",
+      "data": { "value": 975, "prefix": "+$", "suffix": "/mo", "label": "more each month", "sub": "$400K loan, 3% to 7%", "icon": "percent", "meter": { "max": 1200 } } },
+    { "template": "flow", "at": { "word": "Banks" }, "title": "THE CHAIN REACTION", "kicker": "HOW IT SPREADS",
+      "data": { "nodes": [ { "label": "Central bank", "icon": "bank" }, { "label": "Banks", "icon": "scale" }, { "label": "Families", "icon": "house" } ], "edges": ["rates up", "loans cost more"] } },
+    { "template": "compare", "at": { "word": "That" }, "title": "SAME LOAN, TWO RATES", "kicker": "THE MATH",
+      "timing": { "drawStart": { "word": "central", "edge": "start" } },
+      "source": "Standard 30-year fixed amortization on $400,000",
+      "data": { "prefix": "$", "suffix": "/mo", "items": [ { "label": "At 3%", "value": 1686, "icon": "coin" }, { "label": "At 7%", "value": 2661, "icon": "flame", "tone": "bad" } ] } }
+  ]
+}

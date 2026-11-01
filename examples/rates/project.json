@@ -1,0 +1,31 @@
+{
+  "brand": "Money From Scratch",
+  "tail": 1.5,
+  "scenes": [{
+    "id": "fed-hikes",
+    "template": "chart-step",
+    "title": "THE FED'S RATE HIKES",
+    "accent": "#36C9F6",
+    "timing": {
+      "drawStart": { "word": "raised", "edge": "start" },
+      "drawEnd": { "word": "months.", "edge": "end" }
+    },
+    "data": {
+      "label": "Fed funds rate",
+      "sub": "Upper bound of target range",
+      "source": "Federal Reserve (FOMC decisions) - verify before publishing",
+      "unit": "%",
+      "range": ["2022-01-01", "2023-09-15"],
+      "yRange": [0, 6],
+      "xLabels": [
+        { "date": "2022-01-01", "label": "JAN '22" }, { "date": "2022-07-01", "label": "JUL '22" },
+        { "date": "2023-01-01", "label": "JAN '23" }, { "date": "2023-07-01", "label": "JUL '23" }
+      ],
+      "points": [
+        ["2022-01-01", 0.25], ["2022-03-16", 0.50], ["2022-05-04", 1.00], ["2022-06-15", 1.75],
+        ["2022-07-27", 2.50], ["2022-09-21", 3.25], ["2022-11-02", 4.00], ["2022-12-14", 4.50],
+        ["2023-02-01", 4.75], ["2023-03-22", 5.00], ["2023-05-03", 5.25], ["2023-07-26", 5.50]
+      ]
+    }
+  }]
+}

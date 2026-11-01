@@ -1,0 +1,17 @@
+{
+  "name": "mfs-motion-engine",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "render": "node --env-file-if-exists=.env src/render.mjs",
+    "tts": "node --env-file-if-exists=.env tools/tts-elevenlabs.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "^1.56.0",
+    "@fontsource/inter": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=22.9.0"
+  }
+}

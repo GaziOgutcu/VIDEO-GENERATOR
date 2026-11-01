@@ -1,0 +1,12 @@
+{
+  "brand": "Money From Scratch", "seed": "dotcom-bust", "tail": 1.5,
+  "scenes": [
+    { "template": "grid", "title": "THE DOT-COM BUBBLE", "kicker": "WHAT HAPPENED",
+      "data": { "items": [ { "label": "Hype", "icon": "flame" }, { "label": "Cheap money", "icon": "coin" }, { "label": "No profits", "icon": "barsdown" }, { "label": "FOMO", "icon": "rocket" } ] } },
+    { "template": "compare", "at": { "word": "Prices" }, "title": "PRICE VS PROFIT", "kicker": "THE GAP",
+      "timing": { "drawStart": { "word": "raced", "edge": "start" } }, "source": "Illustrative index values, not real data",
+      "data": { "suffix": "", "items": [ { "label": "Stock prices", "value": 100, "icon": "barsup" }, { "label": "Profits", "value": 12, "icon": "magnifier", "tone": "bad" } ] } },
+    { "template": "flow", "at": { "word": "Then" }, "title": "WHY IT POPPED", "kicker": "THE TURN",
+      "data": { "nodes": [ { "label": "Money gets expensive", "icon": "percent" }, { "label": "Prices fall", "icon": "barsdown" }, { "label": "Panic", "icon": "bolt" } ], "edges": ["", "", ""] } }
+  ]
+}
